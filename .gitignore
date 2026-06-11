@@ -1,0 +1,23 @@
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# uv / Python virtual environment
+.venv/
+venv/
+
+# Python caches & build artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
