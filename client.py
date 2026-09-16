@@ -16,6 +16,7 @@ async def sampling_handler(
     ctx: RequestContext
 ) -> str:
     """Handle sampling requests using LiteLLM and OpenAI GPT-4o."""
+    print("[4] CLIENT: sampling_handler invoked — the server's ctx.sample landed here", flush=True)
     chat_messages = []
     if params.systemPrompt:
         chat_messages.append(
@@ -27,10 +28,10 @@ async def sampling_handler(
         # if it's a list, take first supported; if string, use directly.
         # This is demonstrational, however, in reality a more robust handling logic and fallback is needed.
         preferred_model = params.modelPreferences.hints[0].name
-    print(preferred_model)
-    print(params.temperature)
-    print(params.maxTokens)
+    print(f"    ↳ params from server: model={preferred_model} "
+          f"temperature={params.temperature} max_tokens={params.maxTokens}", flush=True)
     try:
+        print(f"[5] CLIENT: calling the real LLM ({preferred_model}) via LiteLLM…", flush=True)
         response = await acompletion(
             model=preferred_model,
             messages=chat_messages,
@@ -39,6 +40,7 @@ async def sampling_handler(
             api_key=os.getenv("OPENAI_API_KEY"),  # .env file approach can also be used
         )
         generated_text = response["choices"][0]["message"]["content"]
+        print("[6] CLIENT: LLM returned text — returning it to the server as the sampling result", flush=True)
     except Exception as e:
         generated_text = f"[Error: LLM failed: {e}]"
 
@@ -52,7 +54,9 @@ async def main():
     print(client.transport)
     async with client:
         f = open("sample.txt", "r")
+        print("[1] CLIENT: calling tool 'summarize_document' on the server", flush=True)
         result = await client.call_tool("summarize_document", {"document_text": f.read()})
+        print("[8] CLIENT: tool result received:\n", flush=True)
         print(result)
 
     # Connection is closed automatically here
@@ -61,4 +65,6 @@ async def main():
     # This context manager automatically handles the connection, initializations, and clean up upon exit.
 
 if __name__ == "__main__":
+    # cd /Users/saviorodrigues/Developer/sampling-mcp-code
+    # uv run client.py
     asyncio.run(main())
